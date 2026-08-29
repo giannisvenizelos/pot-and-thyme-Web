@@ -1,0 +1,10 @@
+{
+  "name": "pot-and-thyme-test",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Recovered static frontend for the PoT & Thyme test application",
+  "scripts": {
+    "dev": "npx serve . -l 3000",
+    "start": "npx serve . -l 3000"
+  }
+}
