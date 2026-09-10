@@ -1767,3 +1767,27 @@ a{color:var(--admin-accent-strong)}
   .admin-app{padding-left:0}
   .admin-sidebar.customer-sidebar{display:none}
 }
+
+
+/* Use the supplied thyme artwork for a true match to the reference rail. */
+.admin-sidebar.customer-sidebar::after{
+  content:"";
+  left:10px;
+  bottom:61px;
+  width:80px;
+  height:115px;
+  background:url("/assets/thyme-branch.png") center/contain no-repeat;
+  opacity:1;
+  filter:none;
+  transform:none;
+}
+.customer-sidebar .side-brand::before{
+  content:"";
+  width:48px;
+  height:52px;
+  background:url("/assets/thyme-sprig.png") center/contain no-repeat;
+  opacity:1;
+  filter:none;
+  transform:none;
+  letter-spacing:normal;
+}
