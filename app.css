@@ -1920,3 +1920,33 @@ a{color:var(--admin-accent-strong)}
 @media(max-width:900px){.home-layout{grid-template-columns:1fr}.home-plan{position:static;max-height:none}.home-picks-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:760px){.home-inner{padding:12px 16px 24px}.home-picks{padding-top:8px}.home-picks-head h2{font-size:26px}.home-picks-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.home-pick-card .card-media{height:160px}}
 @media(max-width:520px){.home-picks-grid{grid-template-columns:1fr}}
+
+/* ---------- Weekly plan days and empty selections ---------- */
+.week-plan-list{display:flex;flex-direction:column;gap:8px;width:100%}
+.week-day-row{display:grid;grid-template-columns:48px minmax(0,1fr);gap:8px;align-items:stretch;min-height:62px}
+.week-day-label{display:flex;align-items:center;color:var(--admin-text-2);font:600 13px/1 var(--font-ui);letter-spacing:-.01em}
+.week-day-row.today .week-day-label{color:var(--admin-accent-strong);font-weight:750}
+.week-day-content{display:flex;flex-direction:column;justify-content:center;gap:7px;min-width:0;width:100%;border-bottom:1px solid var(--admin-line-soft)}
+.week-day-row:last-child .week-day-content{border-bottom:0}
+.week-day-entry.item{width:100%;min-height:52px;margin:0;padding:9px 10px;gap:8px}
+.week-day-recipe{min-width:0;overflow:hidden}
+.week-day-recipe b{display:block;overflow:hidden;color:var(--admin-text);font-size:13px;line-height:1.2;text-overflow:ellipsis;white-space:nowrap}
+.week-day-recipe .muted{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.week-day-entry .qty{flex:none}
+.week-day-entry .qty b{min-width:18px;text-align:center;color:var(--admin-text)}
+.plan-empty-select{width:100%;min-height:47px;padding:10px 12px;border:1px dashed rgba(158,171,112,.54);border-radius:11px;background:rgba(127,148,79,.08);color:var(--admin-olive);font:600 13px/1.2 var(--font-ui);text-align:left;cursor:pointer;transition:background .16s ease,border-color .16s ease,color .16s ease}
+.plan-empty-select:hover{background:rgba(127,148,79,.16);border-color:var(--admin-accent-strong);color:var(--admin-accent-strong)}
+.plan-empty-select:focus-visible{outline:none;box-shadow:0 0 0 2px rgba(242,139,45,.7)}
+.week-plan-extra-label{margin:7px 0 0;padding-top:12px;border-top:1px solid var(--admin-line);color:var(--admin-muted);font-size:11px;font-weight:750;letter-spacing:.12em;text-transform:uppercase}
+.chef-plan-list .week-plan-list{padding:0}
+.chef-plan-list .week-day-row{grid-template-columns:38px minmax(0,1fr);min-height:58px}
+.chef-plan-list .week-day-label{font-size:12px}
+.chef-plan-list .week-day-entry.item{padding:8px 8px}
+.chef-plan-list .week-day-entry .qty{gap:3px}
+.chef-plan-list .week-day-entry .qty button{width:24px;height:24px;font-size:13px}
+.chef-plan-list .week-day-recipe b{font-size:12px}
+@media(max-width:760px){
+  .week-day-row{grid-template-columns:42px minmax(0,1fr)}
+  .week-day-entry.item{padding:9px 8px}
+  .week-day-entry .qty button{width:25px;height:25px}
+}
