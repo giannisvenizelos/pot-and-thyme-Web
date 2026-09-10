@@ -1791,3 +1791,105 @@ a{color:var(--admin-accent-strong)}
   transform:none;
   letter-spacing:normal;
 }
+
+
+/* ---------- Recipe workspace controls and community content ---------- */
+.metrics-row{display:none!important}
+.tabs-row{
+  min-height:72px;
+  padding:14px 32px;
+  align-items:center;
+}
+.recipe-controls{
+  width:100%;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:12px 18px;
+}
+.recipe-controls label{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  color:var(--admin-muted);
+  font-size:12px;
+  font-weight:650;
+}
+.recipe-controls select{
+  min-width:190px;
+  height:40px;
+  padding:8px 34px 8px 13px;
+  border:1px solid var(--admin-line);
+  border-radius:10px;
+  background:rgba(255,255,255,.055);
+  color:var(--admin-text);
+  font-size:13px;
+}
+.recipe-controls select:hover{border-color:rgba(242,139,45,.42)}
+.recipe-controls select:focus{border-color:var(--admin-accent);box-shadow:0 0 0 3px rgba(242,139,45,.16)}
+.recent-community{
+  margin:0 0 28px;
+  padding:20px 0 0;
+}
+.recent-community-head{
+  margin:0 0 14px;
+  align-items:flex-end;
+}
+.recent-community-head h2{
+  margin-top:5px;
+  color:var(--admin-text);
+  font:700 30px/1 var(--font-display);
+  letter-spacing:-.02em;
+}
+.recent-community-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;
+}
+.recent-community-card{
+  min-width:0;
+  gap:0;
+  overflow:hidden;
+  padding:0;
+  border:1px solid var(--admin-line);
+  border-radius:14px;
+  background:linear-gradient(180deg,#1b1e18 0%,#171914 100%);
+  box-shadow:0 12px 30px rgba(0,0,0,.16);
+}
+.recent-community-card:hover{
+  transform:translateY(-2px);
+  border-color:rgba(127,148,79,.52);
+  box-shadow:0 16px 36px rgba(0,0,0,.24);
+}
+.recent-community-card .card-media{
+  height:126px;
+}
+.recent-community-card .card-copy{
+  min-height:112px;
+  padding:13px 15px 5px;
+}
+.recent-community-card .card-copy h3{
+  margin:6px 0 8px;
+  font-size:21px;
+}
+.recent-community-card .actions{
+  padding:8px 15px 14px;
+}
+.recent-community-card .actions .btn{
+  min-height:34px;
+  padding:8px 10px;
+  font-size:11px;
+}
+@media(max-width:900px){
+  .recent-community-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  .tabs-row{min-height:0;padding:12px 16px}
+  .recipe-controls{align-items:stretch;flex-direction:column;gap:9px}
+  .recipe-controls label{width:100%;justify-content:space-between}
+  .recipe-controls select{flex:1;min-width:0}
+  .recent-community{padding-top:8px;margin-bottom:22px}
+  .recent-community-head h2{font-size:26px}
+  .recent-community-grid{grid-template-columns:1fr}
+  .recent-community-card .card-media{height:150px}
+}
