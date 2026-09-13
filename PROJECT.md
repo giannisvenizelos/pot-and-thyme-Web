@@ -10,7 +10,7 @@ PoT & Thyme TEST is a Greek-language meal-planning web application. It combines 
 - **Hosting:** static files on Vercel, plus server-side `/api/*` endpoints in the deployed project.
 - **Data and authentication:** Supabase project `ccvdkbdnykfhenhqkicm` using Auth, PostgREST RPCs and Realtime.
 - **Offline support:** service worker with a versioned application-shell cache and IndexedDB catalogue/bootstrap cache.
-- **Language/UI:** Greek interface; Google Fonts (`Inter` and `Playfair Display`).
+- **Language/UI:** Greek interface; Google Fonts variable families `Literata` (display/serif) and `Inter` (UI/sans), both loaded with their optical-size axis. Both ship a Greek subset — the previous `Playfair Display`/`Cormorant Garamond` pairing did not, so Greek headings silently fell back to Georgia.
 
 ## Frontend modules
 
