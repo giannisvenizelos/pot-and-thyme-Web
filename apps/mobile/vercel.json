@@ -1,6 +1,6 @@
 {
-  "buildCommand": "npm run build:web",
-  "outputDirectory": "apps/web/public",
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
   "framework": null,
   "cleanUrls": false,
   "headers": [

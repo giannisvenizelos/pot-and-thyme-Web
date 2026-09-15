@@ -1,6 +1,6 @@
 /* Third mobile concept: charcoal, warm orange and the supplied thyme artwork. */
 .m-header,.m-bottom-nav,.m-drawer-root{display:none}
-@media (max-width:760px){
+@media all{
   :root{color-scheme:dark;--m-bg:#0c0f0e;--m-card:#181b19;--m-line:#343933;--m-text:#f4f3ed;--m-muted:#b5b9ac;--m-orange:#fa922e;--m-olive:#b5c474}
   html,body{background:var(--m-bg);color:var(--m-text)}
   body{margin:0;min-width:0;background:radial-gradient(ellipse at 80% 0,rgba(137,149,92,.06),transparent 55%),var(--m-bg)}

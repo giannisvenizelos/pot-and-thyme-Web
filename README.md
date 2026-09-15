@@ -1,29 +1,37 @@
 # PoT & Thyme TEST
 
-Recovered source snapshot of the live [PoT & Thyme TEST](https://pot-and-thyme-test.vercel.app/) application.
+Two independently deployable browser applications with shared data modules.
 
-## What is included
+| Edition | Vercel project | Root Directory | Build command | Output directory |
+| --- | --- | --- | --- | --- |
+| Web | pot-and-thyme-test | repository root | npm run build:web | apps/web/public |
+| Mobile | pot-and-thyme-test-mobile | apps/mobile | npm run build | public |
 
-- Complete publicly served frontend (HTML, CSS and JavaScript)
-- Legal/privacy/storage pages
-- Offline service worker
-- Minimal local-run and Vercel configuration
-- Detailed architecture and recovery notes in [`PROJECT.md`](./PROJECT.md)
+The existing web URL remains `https://pot-and-thyme-test.vercel.app/`. The dedicated mobile URL is `https://pot-and-thyme-test-mobile.vercel.app/`.
 
-## Run locally
+## Source layout
+
+- `apps/web/`: web entry point, stylesheet and renderer; does not load mobile modules.
+- `apps/mobile/`: mobile entry point, stylesheets and renderer. The mobile presentation remains active at every viewport width, including phone rotation.
+- `shared/`: data/authentication modules, feature helpers, legal pages and image assets.
+- `scripts/build.mjs`: dependency-free build, copies shared and edition assets and generates a separate versioned offline shell for each edition.
+
+Both apps use the existing Supabase project and accounts. Browser login sessions, offline caches and themes are stored separately on each origin; users sign in separately on each URL. There is no automatic device redirect.
+
+## Local use
 
 ```bash
-npm run dev
+npm run build:all
+npm run dev          # web, port 3000
+npm run dev:mobile   # mobile, port 3001
 ```
 
-Then open `http://localhost:3000`.
+Build output is generated and ignored by Git. Edit source files rather than `public/`.
 
-The UI loads locally, but features that call `/api/catalog`, `/api/recipe` or `/api/ai-fridge` require the unrecovered Vercel serverless functions. Supabase-backed features also depend on the existing remote project and its policies.
+## Git deployments
 
-## Deployment
+Connect both Vercel projects to this repository and use the settings above. For a mobile project rooted at `apps/mobile`, enable access to source files outside the Root Directory so the build can read `shared/` and `scripts/`. Alternatively keep its Root Directory at the repository root, set Build Command to `npm run build:mobile`, and Output Directory to `apps/mobile/public`.
 
-The root directory can be deployed as a static Vercel project. Before changing the production deployment, restore and verify the missing `/api/*` sources and all required environment variables.
+## Existing backend limitation
 
-## Recovery status
-
-The GitHub repository was empty when this snapshot was created. Public deployment assets were recovered on 2026-08-29. Private backend implementation, database migrations and secrets are not exposed by a deployed website and could not be copied from it. See [`PROJECT.md`](./PROJECT.md) for the exact boundary and follow-up checklist.
+This repository was recovered from public frontend assets on 2026-08-29. Serverless `/api/*` source, database migrations and private environment variables are absent. `/api/catalog` returned HTTP 404 on the existing deployment during the split. Catalogue and recipe details retain their existing direct Supabase fallback. AI fridge search still requires the missing `/api/ai-fridge` endpoint; splitting the frontends does not restore it. See `PROJECT.md` for recovery provenance.

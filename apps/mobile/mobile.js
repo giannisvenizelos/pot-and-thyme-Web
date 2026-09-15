@@ -1,9 +1,7 @@
-/* Mobile presentation for the existing app. Desktop renderers and data flows stay in place. */
+/* Dedicated mobile presentation. Shared data flows are supplied by shared/. */
 (function () {
   'use strict';
-  const viewport = window.matchMedia('(max-width: 760px)');
   const originalRender = render;
-  const originalHome = homeViewHTML;
   const originalCategoryControls = categoryControlsHTML;
   let menuOpen = false;
   let catalogRequest = 0;
@@ -58,7 +56,6 @@
   }
   categoryControlsHTML = function () {
     const html = originalCategoryControls();
-    if (!viewport.matches) return html;
     return html.replace('<select id="meal-filter">', '<select id="meal-filter"><option value=""' + (!S.tab ? ' selected' : '') + '>Όλες οι κατηγορίες</option>');
   };
   function quickActions() {
@@ -97,7 +94,6 @@
     return '<section class="m-week-panel" aria-labelledby="mobile-week-title"><div class="m-week-summary">' + icon('calendar') + '<div><h2 id="mobile-week-title">Πλάνο εβδομάδας</h2><p>' + filled + ' / 7 ημέρες με συνταγή</p><progress value="' + filled + '" max="7" aria-label="Ημέρες με επιλεγμένη συνταγή"></progress></div><img src="/assets/thyme-sprig.png" alt="" width="34" height="46"><button type="button" class="m-icon-button" data-m-route="plan" aria-label="Άνοιγμα εβδομαδιαίου πλάνου">' + icon('arrow') + '</button></div>' + planHTML() + '</section>';
   }
   homeViewHTML = function () {
-    if (!viewport.matches) return originalHome();
     const pool = homePoolRows();
     const ids = new Set(pool.map(row => String(row.id)));
     let picks = (S.homeRecipes || []).filter(row => ids.has(String(row.id)));
@@ -167,7 +163,7 @@
     }
   }
   function mobileSearch() {
-    if (!viewport.matches || !S.session) return;
+    if (!S.session) return;
     const input = $('#mobile-search');
     if (!input) return;
     S.search = input.value;
@@ -181,7 +177,7 @@
   function enhance() {
     document.querySelector('.m-drawer-root')?.remove();
     const app = $('#app');
-    if (!viewport.matches || !S.session) {
+    if (!S.session) {
       menuOpen = false; document.body.classList.remove('m-menu-open');
       if (app) app.inert = false;
       return;
@@ -233,7 +229,7 @@
     originalRender.apply(this, arguments); enhance();
   };
   document.addEventListener('click', event => {
-    if (!viewport.matches || !S.session) return;
+    if (!S.session) return;
     const button = event.target.closest('[data-m-route],[data-m-menu],[data-m-dismiss],[data-m-search-focus],[data-m-meal]');
     if (!button) return;
     if (button.hasAttribute('data-m-menu')) return setMenu(true);
@@ -266,12 +262,6 @@
     const first = buttons[0], last = buttons[buttons.length - 1];
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
-  });
-  viewport.addEventListener('change', () => {
-    // Do not discard an in-progress recipe/account form when the phone rotates.
-    if (S.creating || S.sel || S.privacyOpen || S.adminEdit) return;
-    if (menuOpen) setMenu(false);
-    render();
   });
   render();
 })();

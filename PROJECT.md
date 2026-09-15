@@ -12,6 +12,12 @@ PoT & Thyme TEST is a Greek-language meal-planning web application. It combines 
 - **Offline support:** service worker with a versioned application-shell cache and IndexedDB catalogue/bootstrap cache.
 - **Language/UI:** Greek interface; Google Fonts variable families `Literata` (display/serif) and `Inter` (UI/sans), both loaded with their optical-size axis. Both ship a Greek subset — the previous `Playfair Display`/`Cormorant Garamond` pairing did not, so Greek headings silently fell back to Georgia.
 
+## Independent web and mobile deployments (2026-09-15)
+
+The browser interfaces are split into `apps/web/` and `apps/mobile/`. Each owns its entry point, renderer and styles. Common data/authentication and feature modules, legal pages and artwork live in `shared/`. `scripts/build.mjs` generates each app's static `public/` output and edition-specific service worker. The repository-root Vercel configuration builds the web edition, preserving the existing project URL. The dedicated mobile edition loads its own presentation at all widths.
+
+The module inventory below describes the recovered modules; common files now live under `shared/`, and `app4.js` / `app.css` have separate copies under each app directory. Generated service workers replace the recovered `sw.js`.
+
 ## Frontend modules
 
 | File | Responsibility |

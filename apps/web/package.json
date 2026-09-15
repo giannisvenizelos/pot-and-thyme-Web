@@ -1,0 +1,7 @@
+{
+  "name": "pot-and-thyme-test-web",
+  "private": true,
+  "scripts": {
+    "build": "node ../../scripts/build.mjs web"
+  }
+}
