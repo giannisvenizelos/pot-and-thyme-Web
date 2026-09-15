@@ -66,8 +66,8 @@
       routeButton('new', 'Νέα συνταγή', 'plus', 'm-quick') + '</div></section>';
   }
   function photoURL(row) {
-    if (row.title === 'Κοτόπουλο κοκκινιστό με ρύζι') return '/assets/recipe-photo-trial.jpg';
-    const candidate = row.photo_url || S.detailCache?.[row.id]?.photo_url || '';
+    if (row.photo_url === null) return '';
+    const candidate = recipeImage(row) || recipeImage(S.detailCache?.[row.id]) || '';
     try { const url = new URL(candidate, location.origin); if (candidate && (url.protocol === 'https:' || url.origin === location.origin)) return url.href; } catch (_) {}
     return '';
   }

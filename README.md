@@ -35,3 +35,13 @@ Connect both Vercel projects to this repository and use the settings above. For 
 ## Existing backend limitation
 
 This repository was recovered from public frontend assets on 2026-08-29. Serverless `/api/*` source, database migrations and private environment variables are absent. `/api/catalog` returned HTTP 404 on the existing deployment during the split. Catalogue and recipe details retain their existing direct Supabase fallback. AI fridge search still requires the missing `/api/ai-fridge` endpoint; splitting the frontends does not restore it. See `PROJECT.md` for recovery provenance.
+
+## Recipe management and photos
+
+Both editions support photo upload and native phone camera capture. Desktop browsers can open a live camera preview. Images are resized to at most 1600 pixels, converted to JPEG and uploaded to the private Supabase `recipe-photos` bucket (5 MB limit). Stable authenticated Storage URLs are stored in `recipes.photo_url`; the UI obtains temporary signed URLs for display.
+
+The recipe manager account is bound by user ID to `giannis.venizelos@gmail.com`. It can create and edit curated recipes and manage community submissions. Other users can create, edit and delete their own community recipes; edits and photo changes return their submissions to pending moderation. Database RPC checks and Storage RLS enforce this independently of UI controls.
+
+Recipe deletion sets `deleted_at` and hides the recipe from the catalogue. Undo restores it; household plan references remain intact. Removing a photo clears its reference and requests deletion of its Storage object. Replacement uses a unique path and then removes the old object. Photo-link failures preserve the draft and retry the same recipe ID.
+
+Backend setup is recorded in `scripts/recipe-management.sql`. Permission fixtures in `scripts/verify-recipe-permissions.sql` run inside a rolled-back transaction. Run `npm run test:ui` for the editor, upload/retry, ownership, deletion/undo and camera lifecycle checks. Physical device camera behavior still depends on browser support and user permission.

@@ -73,3 +73,9 @@ To make the project fully reproducible, export the missing backend sources from 
 - Keep privileged operations behind server-side endpoints or RLS-protected RPCs.
 - Review the account deletion/export RPCs and moderation RPCs before production use.
 - Treat this deployment as a recovery snapshot until backend sources and migrations are restored and reviewed.
+
+## Recipe management implementation (2026-09-15)
+
+Added shared `recipe-management.js` / `.css`, a private `recipe-photos` Storage bucket, owner-bound management RPCs (`save_recipe`, `set_recipe_photo`, `delete_recipe`, `restore_recipe`, `can_manage_recipe`, `recipe_management_access`) and recoverable deletion via `recipes.deleted_at`. The owner mapping lives in `private.recipe_management_owner`, inaccessible to client roles. Community authors can edit their own content; curated management is restricted to the mapped owner.
+
+Supabase migrations applied: `recipe_management_and_private_photos`, `preserve_recipe_ingredient_variants_in_editor`, and validation/source-preservation updates. Source and rolled-back permission verification are in `scripts/`.
