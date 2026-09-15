@@ -16,3 +16,13 @@
 .recipe-undo{position:fixed;bottom:110px;left:50%;transform:translateX(-50%);z-index:180;max-width:calc(100% - 24px);padding:12px 16px;background:#20251d;color:#fff;border:1px solid #839c62;border-radius:14px;box-shadow:0 6px 24px #0005}
 .recipe-undo .btn{margin-left:10px;color:#fff}
 @media(max-width:760px){.recipe-photo-actions>.btn{min-height:46px}.recipe-management-actions>.btn{width:100%}.recipe-own-list .item>.btn{width:100%}}
+
+.recipe-photo-preview{aspect-ratio:4/3;max-height:none;object-fit:cover;border:1px solid var(--admin-line,#343933)}
+.recipe-crop-controls{max-width:600px;padding:14px;border:1px solid var(--admin-line,#343933);border-radius:14px;background:var(--admin-panel,#181b19)}
+.recipe-crop-controls[hidden]{display:none}
+.recipe-crop-controls>p{margin:0 0 12px;font-weight:600}
+.recipe-crop-controls label{display:grid;grid-template-columns:130px 1fr;gap:12px;align-items:center;margin:12px 0;font-size:14px}
+.recipe-crop-controls input{width:100%;min-width:0;accent-color:#fa922e;cursor:pointer}
+.recipe-crop-controls small{display:block;margin-top:12px;line-height:1.5;opacity:.8}
+.recipe-card-pro .card-media,.recent-community-card .card-media,.m-recipe-media{aspect-ratio:4/3;height:auto!important;min-height:0!important}
+.recipe-card-pro .card-media>img,.recent-community-card .card-media>img,.m-recipe-media>img:not([hidden]){width:100%;height:100%;object-fit:cover}

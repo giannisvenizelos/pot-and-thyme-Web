@@ -5,6 +5,7 @@
   const photoPrefix = BASE + '/storage/v1/object/authenticated/' + bucket + '/';
   const baseRender = render, baseCreate = createModal, baseDetail = recipeModal, baseImage = recipeImage;
   let draft = null, photo = null, preview = '', photoRemoved = false, selection = 0;
+  let cropSource = null, cropZoom = 1, cropX = 50, cropY = 50;
   let stream = null, cameraOpening = false, cameraGeneration = 0, saving = false, preparing = false, ownerRequest = '';
   let lastSession = '', signedTimer = null;
   const signed = new Map(), signing = new Set();
@@ -22,7 +23,7 @@
   function resetDraft() {
     stopCamera(); ++selection;
     if (preview) URL.revokeObjectURL(preview);
-    draft = null; photo = null; preview = ''; photoRemoved = false; preparing = false;
+    draft = null; photo = null; preview = ''; photoRemoved = false; preparing = false; cropSource=null;cropZoom=1;cropX=50;cropY=50;
   }
   function message(text) {
     if (draft) draft.message = text;
@@ -63,7 +64,13 @@
         <button class="btn ghost" type="button" data-photo-rotate hidden>Περιστροφή</button>
         <button class="btn ghost danger" type="button" data-photo-remove hidden>Αφαίρεση φωτογραφίας</button>
       </div>
-      <img class="recipe-photo-preview" alt="Προεπισκόπηση φωτογραφίας συνταγής" hidden>
+      <img class="recipe-photo-preview" alt="Προεπισκόπηση φωτογραφίας συνταγής σε αναλογία 4 προς 3" hidden>
+      <div class="recipe-crop-controls" hidden><p>Το κάδρο της κάρτας σου · 4:3</p>
+        <label>Μεγέθυνση<input type="range" min="1" max="3" step="0.05" value="1" data-crop-zoom></label>
+        <label>Οριζόντια θέση<input type="range" min="0" max="100" value="50" data-crop-x></label>
+        <label>Κάθετη θέση<input type="range" min="0" max="100" value="50" data-crop-y></label>
+        <button class="btn ghost" type="button" data-crop-reset>Κεντράρισμα</button>
+        <small>Αποθήκευση ως JPG, 1200 × 900 px. Κράτησε το πιάτο μέσα στο κάδρο.</small></div>
       <div class="recipe-camera" hidden><video autoplay playsinline muted aria-label="Προεπισκόπηση κάμερας"></video>
         <div class="recipe-photo-actions"><button class="btn" type="button" data-camera-shot>Τράβηξε φωτογραφία</button><button class="btn ghost" type="button" data-camera-close>Κλείσιμο κάμερας</button></div></div>
       <p class="recipe-editor-status" role="status" aria-live="polite"></p></section>`;
@@ -110,29 +117,42 @@
     const source=preview || (!photoRemoved ? recipeImage({photo_url:draft?.photo_url}) : '');
     image.hidden=!source; if(source)image.src=source;else image.removeAttribute('src');
     root.querySelector('[data-photo-remove]').hidden=!(preview || (!photoRemoved && draft?.photo_url));
-    root.querySelector('[data-photo-rotate]').hidden=!photo;
+    root.querySelector('[data-photo-rotate]').hidden=!cropSource;
+    const controls=root.querySelector('.recipe-crop-controls');controls.hidden=!cropSource;
+    root.querySelector('[data-crop-zoom]').value=cropZoom;root.querySelector('[data-crop-x]').value=cropX;root.querySelector('[data-crop-y]').value=cropY;
   }
   async function loadImage(blob) {
     const url=URL.createObjectURL(blob); const image=new Image();
     try { await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(new Error('Χρησιμοποίησε φωτογραφία JPG, PNG ή WebP.'));image.src=url;}); return image; }
     finally { URL.revokeObjectURL(url); }
   }
-  async function preparePhoto(blob,rotate=false) {
+  async function makeCropSource(blob) {
     if(!blob || !blob.size || blob.size>20*1024*1024 || !blob.type.startsWith('image/'))throw new Error('Επίλεξε φωτογραφία έως 20 MB.');
-    const image=await loadImage(blob), scale=Math.min(1,1600/Math.max(image.naturalWidth,image.naturalHeight));
-    const width=Math.max(1,Math.round(image.naturalWidth*scale)),height=Math.max(1,Math.round(image.naturalHeight*scale));
-    const canvas=document.createElement('canvas');canvas.width=rotate?height:width;canvas.height=rotate?width:height;
-    const context=canvas.getContext('2d');context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);
-    if(rotate){context.translate(canvas.width,0);context.rotate(Math.PI/2);}context.drawImage(image,0,0,width,height);
-    const result=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',.85));
-    if(!result || result.size>5*1024*1024)throw new Error('Δεν μπορέσαμε να ετοιμάσουμε τη φωτογραφία. Δοκίμασε μικρότερο αρχείο.');return result;
+    const image=await loadImage(blob),scale=Math.min(1,2400/Math.max(image.naturalWidth,image.naturalHeight));
+    const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+    canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);return canvas;
   }
-  async function selectPhoto(blob,rotate=false) {
+  async function renderCrop(request=++selection) {
+    if(!cropSource||saving)return;preparing=true;const submit=editorRoot()?.querySelector('[data-submit],[data-recipe-save]');if(submit)submit.disabled=true;
+    const width=Math.min(cropSource.width,cropSource.height*4/3)/cropZoom,height=width*3/4;
+    const x=(cropSource.width-width)*cropX/100,y=(cropSource.height-height)*cropY/100;
+    const canvas=document.createElement('canvas');canvas.width=1200;canvas.height=900;
+    const context=canvas.getContext('2d');context.fillStyle='#fff';context.fillRect(0,0,1200,900);context.drawImage(cropSource,x,y,width,height,0,0,1200,900);
+    try { const result=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',.85));
+      if(request!==selection||!draft)return;if(!result||result.size>5*1024*1024)throw new Error('Δεν μπορέσαμε να ετοιμάσουμε τη φωτογραφία.');
+      if(preview)URL.revokeObjectURL(preview);photo=result;preview=URL.createObjectURL(result);photoRemoved=false;updatePreview();message('Αυτό το κάδρο θα εμφανίζεται στις συνταγές. Αποθήκευσε όταν είσαι έτοιμος.');
+    } catch(error){if(request===selection)message(error.message);}
+    finally{if(request===selection){preparing=false;const currentSubmit=editorRoot()?.querySelector('[data-submit],[data-recipe-save]');if(currentSubmit)currentSubmit.disabled=saving;}}
+  }
+  async function selectPhoto(blob) {
     if(saving)return;const request=++selection;preparing=true;editorRoot()?.querySelector('[data-submit],[data-recipe-save]')?.setAttribute('disabled','');message('Ετοιμάζεται η φωτογραφία…');
-    try { const result=await preparePhoto(blob,rotate);if(request!==selection||!draft)return;
-      if(preview)URL.revokeObjectURL(preview);photo=result;preview=URL.createObjectURL(result);photoRemoved=false;updatePreview();message('Η φωτογραφία θα αποθηκευτεί μαζί με τη συνταγή.'); }
+    try { const source=await makeCropSource(blob);if(request!==selection||!draft)return;cropSource=source;cropZoom=1;cropX=50;cropY=50;await renderCrop(request); }
     catch(error){if(request===selection)message(error.message);}
     finally{if(request===selection){preparing=false;const submit=editorRoot()?.querySelector('[data-submit],[data-recipe-save]');if(submit)submit.disabled=saving;}}
+  }
+  function rotateCrop() {
+    if(!cropSource||saving)return;const canvas=document.createElement('canvas');canvas.width=cropSource.height;canvas.height=cropSource.width;
+    const context=canvas.getContext('2d');context.translate(canvas.width,0);context.rotate(Math.PI/2);context.drawImage(cropSource,0,0);cropSource=canvas;cropZoom=1;cropX=50;cropY=50;renderCrop();
   }
   async function openCamera() {
     if(saving||cameraOpening||stream)return;
@@ -246,15 +266,17 @@
     if(uid&&ownerRequest!==uid){ownerRequest=uid;api('/rest/v1/rpc/recipe_management_access',{method:'POST',body:'{}'}).then(async allowed=>{if(S.session?.user.id!==uid)return;S.recipeManager=allowed===true;await loadOwnRecipes();render();}).catch(()=>{});}
     if(uid&&!signedTimer)signedTimer=setTimeout(()=>{signedTimer=null;if(S.session)render();},5*60*1000);
   };
+  document.addEventListener('input',event=>{if(!cropSource||saving)return;const field=event.target;if(field.matches('[data-crop-zoom]'))cropZoom=Number(field.value);else if(field.matches('[data-crop-x]'))cropX=Number(field.value);else if(field.matches('[data-crop-y]'))cropY=Number(field.value);else return;renderCrop();});
   document.addEventListener('change',event=>{if(event.target.matches('[data-recipe-file],[data-recipe-capture]')){const file=event.target.files[0];event.target.value='';if(file)selectPhoto(file);}});
   document.addEventListener('click',event=>{
-    const button=event.target.closest('[data-recipe-camera],[data-camera-shot],[data-camera-close],[data-photo-remove],[data-photo-rotate],[data-recipe-edit],[data-recipe-edit-close],[data-recipe-save],[data-recipe-delete],[data-recipe-delete-confirm],[data-recipe-delete-cancel],[data-recipe-undo],[data-own-recipe]');
+    const button=event.target.closest('[data-recipe-camera],[data-camera-shot],[data-camera-close],[data-photo-remove],[data-photo-rotate],[data-crop-reset],[data-recipe-edit],[data-recipe-edit-close],[data-recipe-save],[data-recipe-delete],[data-recipe-delete-confirm],[data-recipe-delete-cancel],[data-recipe-undo],[data-own-recipe]');
     if(!button)return;
     if(button.hasAttribute('data-recipe-camera'))openCamera();
     else if(button.hasAttribute('data-camera-shot'))cameraShot();
     else if(button.hasAttribute('data-camera-close'))stopCamera();
-    else if(button.hasAttribute('data-photo-rotate'))selectPhoto(photo,true);
-    else if(button.hasAttribute('data-photo-remove')){++selection;preparing=false;const submit=editorRoot()?.querySelector('[data-submit],[data-recipe-save]');if(submit)submit.disabled=saving;if(preview)URL.revokeObjectURL(preview);photo=null;preview='';photoRemoved=true;updatePreview();message('Η φωτογραφία θα αφαιρεθεί όταν αποθηκεύσεις.');}
+    else if(button.hasAttribute('data-photo-rotate'))rotateCrop();
+    else if(button.hasAttribute('data-crop-reset')){cropZoom=1;cropX=50;cropY=50;renderCrop();}
+    else if(button.hasAttribute('data-photo-remove')){++selection;preparing=false;const submit=editorRoot()?.querySelector('[data-submit],[data-recipe-save]');if(submit)submit.disabled=saving;if(preview)URL.revokeObjectURL(preview);photo=null;preview='';photoRemoved=true;cropSource=null;updatePreview();message('Η φωτογραφία θα αφαιρεθεί όταν αποθηκεύσεις.');}
     else if(button.hasAttribute('data-recipe-edit'))editRecipe();
     else if(button.hasAttribute('data-recipe-edit-close')){if(saving)return;S.recipeEdit=null;resetDraft();render();}
     else if(button.hasAttribute('data-recipe-save'))saveRecipe();

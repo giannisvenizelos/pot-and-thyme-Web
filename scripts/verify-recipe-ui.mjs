@@ -10,7 +10,7 @@ async function settle() { for (let i=0;i<10;i++) await tick(); }
 
 async function setup(owner=false) {
   const dom=new JSDOM('<main id="app"></main>',{url:'https://test.example',runScripts:'outside-only'});
-  const w=dom.window, calls=[];let nextId=10,failUpload=false,delayUpload=false,releaseUpload,failLink=false,tracksStopped=0;
+  const w=dom.window, calls=[],draws=[];let nextId=10,failUpload=false,delayUpload=false,releaseUpload,failLink=false,tracksStopped=0;
   const uid=owner?'11111111-1111-4111-8111-111111111111':'22222222-2222-4222-8222-222222222222';
   Object.assign(w,{
     BASE:'https://example.supabase.co',KEY:'publishable-test-only',
@@ -27,7 +27,7 @@ async function setup(owner=false) {
   });
   w.crypto.randomUUID=randomUUID;w.URL.createObjectURL=()=> 'blob:'+randomUUID();w.URL.revokeObjectURL=()=>{};
   w.Image=class {naturalWidth=2200;naturalHeight=1600;set src(value){Promise.resolve().then(()=>this.onload());}};
-  w.HTMLCanvasElement.prototype.getContext=()=>({fillRect(){},drawImage(){},translate(){},rotate(){},fillStyle:''});
+  w.HTMLCanvasElement.prototype.getContext=function(){const canvas=this;return {fillRect(){},drawImage(...args){draws.push({width:canvas.width,height:canvas.height,args});},translate(){},rotate(){},fillStyle:''};};
   w.HTMLCanvasElement.prototype.toBlob=function(callback,type){callback(new w.Blob(['compressed-image'],{type}));};
   Object.defineProperty(w.navigator,'mediaDevices',{value:{getUserMedia:async()=>({getTracks:()=>[{stop(){tracksStopped++;}}]})}});
   w.eval(app3);
@@ -39,13 +39,21 @@ async function setup(owner=false) {
   function input(selector,value){const field=w.document.querySelector(selector);assert(field,selector);field.value=value;}
   function fill(){input('#ct','Συνταγή δοκιμής');input('[data-ing-qty]','2');input('[data-ing-item]','Πατάτες');input('[data-step-text]','Μαγείρεψε.');}
   function choose(){const field=w.document.querySelector('[data-recipe-file]');Object.defineProperty(field,'files',{value:[new w.File(['image'],'photo.png',{type:'image/png'})],configurable:true});field.dispatchEvent(new w.Event('change',{bubbles:true}));}
-  return {w,calls,click,input,fill,choose,close:()=>dom.window.close(),uid,setFailUpload:()=>failUpload=true,setFailLink:()=>failLink=true,setDelayUpload:()=>delayUpload=true,release:()=>releaseUpload?.(),stopped:()=>tracksStopped};
+  return {w,calls,draws,click,input,fill,choose,close:()=>dom.window.close(),uid,setFailUpload:()=>failUpload=true,setFailLink:()=>failLink=true,setDelayUpload:()=>delayUpload=true,release:()=>releaseUpload?.(),stopped:()=>tracksStopped};
 }
 
 const a=await setup();
 try {
   a.w.S.creating=true;a.w.render();a.fill();a.choose();await settle();
   assert.equal(a.w.document.querySelector('.recipe-photo-preview').hidden,false);
+  const initial=a.draws.at(-1);assert.equal(initial.width,1200);assert.equal(initial.height,900);assert(Math.abs(initial.args[3]/initial.args[4]-4/3)<1e-10);
+  const zoom=a.w.document.querySelector('[data-crop-zoom]');zoom.value='2';zoom.dispatchEvent(new a.w.Event('input',{bubbles:true}));await settle();
+  assert.equal(a.draws.at(-1).args[3],initial.args[3]/2);
+  const position=a.w.document.querySelector('[data-crop-x]');position.value='100';position.dispatchEvent(new a.w.Event('input',{bubbles:true}));await settle();
+  const moved=a.draws.at(-1);assert.equal(moved.args[1],2200-moved.args[3]);
+  a.click('[data-crop-reset]');await settle();assert.equal(a.draws.at(-1).args[3],initial.args[3]);
+  a.click('[data-photo-rotate]');await settle();assert(Math.abs(a.draws.at(-1).args[3]/a.draws.at(-1).args[4]-4/3)<1e-10);
+  assert.equal(a.w.document.querySelector('[data-submit]').disabled,false);
   a.w.render();assert.equal(a.w.document.querySelector('#ct').value,'Συνταγή δοκιμής');
   a.setFailUpload();a.click('[data-submit]');await settle();
   assert.equal(a.w.document.querySelector('#ct').value,'Συνταγή δοκιμής');assert.equal(a.w.S.creating,true);
