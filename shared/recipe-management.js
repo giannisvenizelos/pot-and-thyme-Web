@@ -178,7 +178,7 @@
     const previous=photoPath(draft.photo_url);
     if(photo) {
       const path=S.session.user.id+'/'+id+'/'+crypto.randomUUID()+'.jpg';
-      await storageRequest('object/'+bucket+'/'+path,{method:'POST',headers:{'Content-Type':'image/jpeg','x-upsert':'false','cache-control':'3600'},body:photo});
+      await storageRequest('object/'+bucket+'/'+path,{method:'POST',headers:{'Content-Type':'image/jpeg','x-upsert':'false','cache-control':'max-age=3600'},body:photo});
       try { draft.photo_url=await api('/rest/v1/rpc/set_recipe_photo',{method:'POST',body:JSON.stringify({p_recipe_id:id,p_path:path})}); }
       catch(error){try{await removeStoredPhoto(path);}catch{}throw error;}
       if(previous)try{await removeStoredPhoto(previous);}catch{S.status='Η φωτογραφία αποθηκεύτηκε. Η παλιά φωτογραφία δεν αφαιρέθηκε από τον χώρο αποθήκευσης.';}

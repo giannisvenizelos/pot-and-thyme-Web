@@ -32,8 +32,16 @@ async function collect(directory, prefix = '') {
 }
 await collect(output);
 const version = hash.digest('hex').slice(0, 12);
+// A new HTML shell must fetch the matching code even while the previous worker is active.
+for (const asset of assets.filter(asset => asset.endsWith('.html'))) {
+  const file = join(output, asset.slice(1));
+  const html = await readFile(file, 'utf8');
+  await writeFile(file, html.replace(/((?:src|href)=")([^"?#]+\.(?:js|css))(?:\?[^"#]*)?(")/g,
+    (match, before, url, after) => url.startsWith('/') ? `${before}${url}?v=${version}${after}` : match));
+}
+const shellAssets = assets.map(asset => /\.(?:js|css)$/.test(asset) ? `${asset}?v=${version}` : asset);
 const worker = `const CACHE=${JSON.stringify('pot-thyme-' + edition + '-' + version)};
-const ASSETS=${JSON.stringify(['/', ...assets])};
+const ASSETS=${JSON.stringify(['/', ...shellAssets])};
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting())));
 self.addEventListener('activate', event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('pot-thyme-') && key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim())));
 self.addEventListener('fetch', event => {
