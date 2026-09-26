@@ -49,16 +49,17 @@ if(!document.__potMenuBound){document.__potMenuBound=true;document.addEventListe
 $('[data-theme-toggle]')?.addEventListener('click',()=>{applyTheme(readTheme()==='light'?'dark':'light')});
 $('[data-bell]')?.addEventListener('click',()=>navigateView('recipes','recipes'));
 }
-function viewFromUrl(){let view=location.hash.slice(1);return ['home','recipes','plan','shop'].includes(view)?view:'home'}
+function routeFromUrl(){let route=location.hash.slice(1);return ['home','discover','recipes','plan','shop'].includes(route)?route:'home'}
 function navigateView(next,sideNav=next,updateUrl=true){
   if(!['home','recipes','plan','shop'].includes(next))return;
   S.view=next;S.sideNav=sideNav;
-  if(updateUrl&&location.hash!=='#'+next)history.pushState(null,'','#'+next);
+  let route=next==='recipes'&&sideNav==='discover'?'discover':next;
+  if(updateUrl&&location.hash!=='#'+route)history.pushState(null,'','#'+route);
   if(next==='home'){
     S.cat='';S.search='';S.homePool=null;S.homeRecipes=null;S.heroId=null;
     render();loadHomePool().then(render).catch(()=>{});
   }else render();
 }
-function syncViewFromUrl(){let next=viewFromUrl();if(next!==S.view)navigateView(next,next==='recipes'?'discover':next,false)}
+function syncViewFromUrl(){let route=routeFromUrl(),next=route==='discover'?'recipes':route;if(next!==S.view||route!==S.sideNav)navigateView(next,route,false)}
 function readTheme(){try{return localStorage.getItem('pot_theme_v1')==='light'?'light':'dark'}catch{return 'dark'}}
-function applyTheme(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('pot_theme_v1',t)}catch{}}async function boot(){applyTheme(readTheme());S.view=viewFromUrl();S.sideNav=S.view==='recipes'?'discover':S.view;window.addEventListener('popstate',syncViewFromUrl);window.addEventListener('hashchange',syncViewFromUrl);S.session=readSession();S.__bootResolved=!S.session;render();if('serviceWorker'in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});if(!S.session)return;hydrateCache();if(sessionNeedsRefresh()){let ok=await refreshSession();if(!ok){saveSession(null);S.house=null;S.__bootResolved=true;render();return}}Promise.allSettled([fetchCatalog(true),refreshBootstrap(false),loadTaxonomy(),loadRecentCommunity(),loadHomePool()]).then(()=>{S.__bootResolved=true;render();loadModeration()})}boot();
+function applyTheme(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('pot_theme_v1',t)}catch{}}async function boot(){applyTheme(readTheme());let route=routeFromUrl();S.view=route==='discover'?'recipes':route;S.sideNav=route;window.addEventListener('popstate',syncViewFromUrl);window.addEventListener('hashchange',syncViewFromUrl);S.session=readSession();S.__bootResolved=!S.session;render();if('serviceWorker'in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});if(!S.session)return;hydrateCache();if(sessionNeedsRefresh()){let ok=await refreshSession();if(!ok){saveSession(null);S.house=null;S.__bootResolved=true;render();return}}Promise.allSettled([fetchCatalog(true),refreshBootstrap(false),loadTaxonomy(),loadRecentCommunity(),loadHomePool()]).then(()=>{S.__bootResolved=true;render();loadModeration()})}boot();
