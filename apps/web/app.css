@@ -2468,3 +2468,5 @@ button.wk-item:hover{background:rgba(var(--veil),.06)}
   .recipes-view .recipe-controls{flex-basis:100%}
   .recipes-view .tabs-row .recipe-new-button{width:100%;margin-left:0}
 }
+
+.home-side .home-new-recipe{width:100%;min-height:44px}
